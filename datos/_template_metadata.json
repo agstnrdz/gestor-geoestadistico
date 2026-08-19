@@ -1,0 +1,20 @@
+{
+  "id": "GEO-2025-0042",
+  "titulo": "Establecimientos de salud pública - Comodoro Rivadavia",
+  "categoria": "salud",
+  "descripcion": "Descripción de qué son los datos, cómo fueron relevados y qué limitaciones tienen.",
+  "fuente": "Secretaría de Salud Municipal / relevamiento GPS propio",
+  "organismo": "Municipalidad de Comodoro Rivadavia",
+  "area": "Dirección General de Modernización e Investigación Territorial",
+  "srs": "EPSG:5344",
+  "tipo_geometria": "Point",
+  "campos": ["id", "nombre", "tipo", "dependencia", "lat", "lng"],
+  "cantidad_registros": 38,
+  "fecha_creacion": "2025-03-15",
+  "fecha_actualizacion": "2025-03-15",
+  "version": "1.0",
+  "formatos_disponibles": ["gpkg", "geojson", "csv"],
+  "url_repositorio": "https://...",
+  "url_visualizacion": "https://...",
+  "limitaciones": "No incluye establecimientos privados."
+}
