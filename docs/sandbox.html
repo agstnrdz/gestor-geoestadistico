@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sandbox | DGMIT</title>
+  <meta name="description" content="Laboratorio de experimentos. Exploración de librerías y técnicas." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem 2rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .hero.visible { opacity: 1; transform: translateY(0); }
+    .hero h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 0.97rem; color: var(--text-sub); line-height: 1.7; max-width: 640px; }
+
+    .map-section {
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
+      padding: 0 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .map-section.visible { opacity: 1; transform: translateY(0); }
+
+    .map-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 1.25rem;
+    }
+
+    .map-card {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      padding: 1.2rem;
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset 23px 23px 54px rgba(13, 39, 80, 0.04),
+        -31px -31px 43px #FFFFFF,
+        8px 8px 10px rgba(13, 39, 80, 0.04);
+    }
+
+    .map-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .map-card-header h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+    .map-card-header p {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      margin-top: 0.15rem;
+    }
+
+    #map {
+      height: 480px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        inset 4px 4px 12px rgba(13, 39, 80, 0.12),
+        inset -3px -3px 8px rgba(255,255,255,0.6);
+    }
+
+    .map-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.85rem;
+    }
+
+    .map-meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      border-radius: 99px;
+      padding: 0.3rem 0.85rem;
+      box-shadow:
+        inset -3px -3px 6px #FFFFFF,
+        inset 3px 3px 6px rgba(13, 39, 80, 0.07);
+    }
+    .map-meta-chip span { font-size: 15px; color: var(--accent); }
+
+    .bottom-pad { height: 4rem; }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <section class="hero" id="hero">
+    <a class="back-link" id="back" href="index.html">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Volver al inicio
+    </a>
+    <h1>Sand<span>box</span></h1>
+    <p>Laboratorio de experimentos.</p>
+  </section>
+
+  <div class="map-section" id="map-section">
+    <p class="map-label">Experimento 01 — Mapa base interactivo</p>
+    <div class="map-card">
+      <div class="map-card-header">
+        <div class="card-icon-wrap">
+          <span class="material-symbols-outlined">layers</span>
+        </div>
+        <div>
+          <h2>Leaflet.js 1.9.4 — OpenStreetMap</h2>
+          <p>Mapa base centrado en Comodoro Rivadavia.</p>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="map-meta">
+        <span class="map-meta-chip">
+          <span class="material-symbols-outlined">location_on</span>
+          −45.8657°, −67.4986°
+        </span>
+        <span class="map-meta-chip">
+          <span class="material-symbols-outlined">zoom_in</span>
+          Zoom inicial: 13
+        </span>
+        <span class="map-meta-chip">
+          <span class="material-symbols-outlined">code</span>
+          Leaflet 1.9.4
+        </span>
+        <span class="map-meta-chip">
+          <span class="material-symbols-outlined">map</span>
+          OpenStreetMap
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-pad"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+
+    setTimeout(() => document.getElementById('back').classList.add('visible'), 50);
+    setTimeout(() => observer.observe(document.getElementById('hero')), 100);
+    setTimeout(() => observer.observe(document.getElementById('map-section')), 200);
+
+    const map = L.map('map', {
+      center: [-45.8657, -67.4986],
+      zoom: 13,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const marker = L.marker([-45.8657, -67.4986]).addTo(map);
+    marker.bindPopup(
+      '<strong>Comodoro Rivadavia</strong><br>Departamento de Geoestadísticas, DGMIT'
+    ).openPopup();
+  </script>
+
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visor de mapas | DGMIT</title>
+  <meta name="description" content="Visor cartográfico de datos georreferenciados de Comodoro Rivadavia." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+  <style>
+    .page {
+      width: calc(100% - 8rem);
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 1.5rem 0 2rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      text-decoration: none;
+      margin-bottom: 2rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease, color 0.2s;
+    }
+    .back-link.visible  { opacity: 1; transform: translateY(0); }
+    .back-link:hover    { color: var(--accent); }
+    .back-link span     { font-size: 18px; }
+
+    .page-header        { margin-bottom: 1.5rem; }
+    .page-header h1 {
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 500;
+      color: #070707;
+      line-height: 1.2;
+      margin-bottom: 0.3rem;
+    }
+    .page-header h1 span { color: var(--accent); }
+    .page-header p       { font-size: 0.95rem; color: var(--text-sub); }
+
+    .stats-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.75rem;
+    }
+    .stat-chip {
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      border-radius: 99px;
+      padding: 0.45rem 1rem;
+      font-size: 0.83rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset  5px  5px 10px rgba(13,39,80,0.08),
+        -8px -8px 15px #FFFFFF,
+         5px  5px 10px rgba(13,39,80,0.06);
+    }
+    .stat-chip strong { font-weight: 700; }
+    .stat-chip .dot   { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    #test-banner { display: none; margin-bottom: 1.5rem; }
+    .test-banner-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      background: linear-gradient(145deg, #f0f2f1, #e4e6e5);
+      border-radius: 16px;
+      padding: 0.85rem 1.15rem;
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset  5px  5px 10px rgba(13,39,80,0.06);
+      font-size: 0.83rem;
+      color: var(--text-sub);
+      line-height: 1.55;
+    }
+
+    .visor-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) { .visor-layout { grid-template-columns: 1fr; } }
+
+    .panel {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      padding: 1.5rem;
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset  23px  23px 54px rgba(13,39,80,0.04),
+        -31px -31px 43px #FFFFFF,
+          8px   8px 10px rgba(13,39,80,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .panel-section-title {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      margin-bottom: 0.6rem;
+    }
+
+    .layer-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -4px -4px 8px #FFFFFF,
+        inset  4px  4px 8px rgba(13,39,80,0.08),
+        -6px -6px 12px #FFFFFF,
+         4px  4px  8px rgba(13,39,80,0.05);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 0.5rem;
+      text-align: left;
+    }
+    .layer-btn.active {
+      color: var(--accent);
+      box-shadow:
+        inset 4px 4px 8px rgba(13,39,80,0.12),
+        inset -4px -4px 8px #FFFFFF;
+    }
+    .layer-btn .dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .layer-btn .count { margin-left: auto; font-size: 0.75rem; color: var(--text-sub); }
+
+    .filter-select {
+      width: 100%;
+      padding: 0.55rem 0.9rem;
+      border: none;
+      outline: none;
+      border-radius: 12px;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      box-shadow:
+        inset 4px 4px 10px rgba(13,39,80,0.1),
+        inset -3px -3px 8px #FFFFFF;
+      cursor: pointer;
+      appearance: none;
+    }
+    .select-wrap          { position: relative; }
+    .select-wrap::after {
+      content: 'expand_more';
+      font-family: 'Material Symbols Outlined';
+      position: absolute;
+      right: 0.8rem; top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-sub);
+      pointer-events: none;
+    }
+
+    .btn-clear {
+      width: 100%;
+      padding: 0.55rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -4px -4px 8px #FFFFFF,
+        inset  4px  4px 8px rgba(13,39,80,0.08),
+        -6px -6px 12px #FFFFFF,
+         4px  4px  8px rgba(13,39,80,0.05);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .btn-clear:hover { color: var(--accent); }
+
+    .map-card {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset  23px  23px 54px rgba(13,39,80,0.04),
+        -31px -31px 43px #FFFFFF,
+          8px   8px 10px rgba(13,39,80,0.04);
+      overflow: hidden;
+      position: relative;
+    }
+    #map {
+      height: 760px;
+      width: 100%;
+      border-radius: var(--card-radius);
+    }
+
+    .map-counter {
+      position: absolute;
+      bottom: 1.2rem; left: 1.2rem;
+      z-index: 800;
+      background: var(--bg);
+      border-radius: 99px;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      box-shadow:
+        inset -4px -4px 8px #FFFFFF,
+        inset  4px  4px 8px rgba(13,39,80,0.08),
+        -6px -6px 12px #FFFFFF,
+         4px  4px  8px rgba(13,39,80,0.05);
+      pointer-events: none;
+    }
+    .map-counter strong { color: var(--accent); }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+      font-family: 'Inter', sans-serif !important;
+      padding: 0 !important;
+    }
+    .leaflet-popup-content { margin: 0 !important; width: auto !important; min-width: 200px; }
+    .leaflet-popup-tip-container { margin-top: -1px; }
+
+    .popup-inner    { padding: 1rem 1.1rem; }
+    .popup-id       { font-size: 0.68rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #aaa; margin-bottom: 0.3rem; }
+    .popup-calle    { font-size: 0.92rem; font-weight: 600; color: #1b1b1b; margin-bottom: 0.15rem; }
+    .popup-inter    { font-size: 0.82rem; color: #666; margin-bottom: 0.75rem; }
+    .popup-row      { display: flex; justify-content: space-between; font-size: 0.8rem; color: #555; padding: 0.25rem 0; border-top: 1px solid rgba(0,0,0,0.06); }
+    .popup-row span:last-child { font-weight: 500; color: #1b1b1b; }
+    .popup-estado   { display: inline-block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 99px; color: white; }
+
+    .dens-item  { display: flex; align-items: center; gap: 0.55rem; font-size: 0.8rem; color: var(--text-sub); }
+    .dens-swatch { width: 18px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+
+    #loading-state {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      padding: 0.5rem 0;
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(0,106,135,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <div class="page">
+
+    <a class="back-link" href="capas.html">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      Seleccionar capa
+    </a>
+
+    <div class="page-header" id="page-header">
+      <h1>Visor de <span>mapas</span></h1>
+      <p id="page-desc">Cargando capa…</p>
+    </div>
+
+    <div id="test-banner">
+      <div class="test-banner-inner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#b08000;flex-shrink:0;margin-top:0.05rem" aria-hidden="true">info</span>
+        <span id="test-banner-text">Esta capa contiene <strong>datos de prueba</strong>. Los datos reales aún no han sido cargados.</span>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row"></div>
+
+    <div class="visor-layout">
+
+      <div class="panel" id="panel">
+
+        <div id="panel-capa-activa">
+          <p class="panel-section-title">Capa activa</p>
+          <div id="loading-state">
+            <div class="spinner"></div>
+            <span>Cargando…</span>
+          </div>
+        </div>
+
+        <div id="panel-contenido"></div>
+
+      </div>
+
+      <div class="map-card">
+        <div id="map"></div>
+        <div class="map-counter">
+          Mostrando <strong id="showing-count">—</strong>
+          <span id="map-unit">elementos</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+    const map = L.map('map', {
+      center: [-45.8656, -67.4822],
+      zoom: 13,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+
+    const _loadedScripts = new Set();
+
+    function loadScript(src) {
+      if (_loadedScripts.has(src)) return Promise.resolve();
+      _loadedScripts.add(src);
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload  = resolve;
+        s.onerror = () => reject(new Error('No se pudo cargar: ' + src));
+        document.head.appendChild(s);
+      });
+    }
+
+    function mostrarFallbackPrueba(nombreCapa) {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('panel-contenido').innerHTML = '';
+      document.getElementById('test-banner').style.display = 'block';
+      document.getElementById('test-banner-text').innerHTML =
+        'Esta capa contiene <strong>datos de prueba</strong>. El módulo de visualización aún no está disponible.';
+      document.getElementById('stats-row').innerHTML = `
+        <div class="stat-chip">
+          <span class="material-symbols-outlined" style="font-size:15px;color:var(--text-sub)">info</span>
+          Sin datos reales · capa de prueba
+        </div>`;
+      document.getElementById('showing-count').textContent = '0';
+    }
+
+    async function initVisor() {
+      const params = new URLSearchParams(window.location.search);
+      const capa   = params.get('capa') || 'rampas_accesibilidad';
+
+      try {
+        await loadScript(`assets/capas/${capa}.js`);
+      } catch (e) {
+        mostrarFallbackPrueba(capa);
+        return;
+      }
+
+      const cfg = window.CAPA_CONFIG;
+
+      document.querySelector('#page-header h1').innerHTML = 'Visor de ' + cfg.titulo;
+      document.getElementById('page-desc').textContent    = cfg.desc;
+      document.title = cfg.titulo.replace(/<[^>]+>/g, '') + ' — Visor | DGMIT · Comodoro Rivadavia';
+
+      document.getElementById('loading-state').outerHTML = `
+        <button class="layer-btn active" style="cursor:default">
+          <span class="dot" style="background:var(--accent)"></span>
+          ${cfg.nombreCorto || cfg.titulo.replace(/<[^>]+>/g, '')}
+        </button>`;
+
+      if (cfg.esTest) {
+        document.getElementById('test-banner').style.display = 'block';
+        if (cfg.testMsg) document.getElementById('test-banner-text').innerHTML = cfg.testMsg;
+      }
+
+      if (cfg.dataScripts && cfg.dataScripts.length) {
+        for (const src of cfg.dataScripts) {
+          try {
+            await loadScript(src);
+          } catch (e) {
+            console.warn('Archivo de datos no encontrado (se continúa):', src);
+          }
+        }
+      }
+
+      if (cfg.buildPanel) {
+        document.getElementById('panel-contenido').innerHTML = cfg.buildPanel();
+      }
+
+      if (cfg.buildStats) {
+        cfg.buildStats(document.getElementById('stats-row'));
+      }
+
+      if (cfg.init) {
+        cfg.init(map);
+      }
+    }
+
+    setTimeout(() => {
+      const bl = document.querySelector('.back-link');
+      if (bl) bl.classList.add('visible');
+    }, 80);
+
+    initVisor();
+  </script>
+
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

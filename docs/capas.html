@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seleccionar capa | DGMIT</title>
+  <meta name="description" content="Seleccioná la capa georreferenciada que querés visualizar en el visor cartográfico. Departamento de Geoestadísticas, DGMIT, Municipio de Comodoro Rivadavia." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <style>
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 2.5rem 5rem;
+    }
+    .page-header { margin-bottom: 2.5rem; }
+
+    .layers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .layer-card {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      padding: 0;
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset  23px  23px 54px rgba(13, 39, 80, 0.04),
+        -31px -31px 43px #FFFFFF,
+          8px   8px 10px rgba(13, 39, 80, 0.04);
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .layer-card.visible  { opacity: 1; transform: translateY(0); }
+    .layer-card:hover    { transform: translateY(-8px); }
+    .layer-card:hover .card-accent-bar { opacity: 1; }
+    .layer-card:hover .card-arrow      { opacity: 1; transform: translateX(0); }
+    .layer-card[aria-disabled="true"]  { pointer-events: none; cursor: default; }
+
+    .card-accent-bar { background: none; }
+
+    .card-icon-wrap {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+    }
+    .card-icon-wrap span { font-size: 16px; }
+
+    .map-preview {
+      width: 100%;
+      height: 108px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border-radius: var(--card-radius) var(--card-radius) 0 0;
+    }
+    .map-preview svg { width: 100%; height: 100%; }
+
+    .card-body {
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+    }
+    .card-meta        { display: flex; align-items: center; gap: 0.45rem; }
+    .card-title-block { min-width: 0; }
+    .card-title       { font-size: 0.92rem; font-weight: 600; color: var(--text-main); line-height: 1.25; }
+    .card-subtitle    { font-size: 0.73rem; color: var(--text-sub); margin-top: 0.05rem; }
+    .card-desc        { font-size: 0.81rem; color: var(--text-sub); line-height: 1.55; }
+    .card-count       { font-size: 0.78rem; color: var(--text-sub); display: flex; align-items: center; gap: 0.3rem; }
+    .card-count strong { color: var(--text-main); font-weight: 600; }
+
+    .test-note {
+      max-width: 1100px;
+      margin: 2.5rem auto 0;
+      padding: 0 2.5rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .test-note.visible { opacity: 1; transform: translateY(0); }
+    .test-note-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: linear-gradient(145deg, #f0f2f1, #e4e6e5);
+      border-radius: 16px;
+      padding: 0.9rem 1.2rem;
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset  5px  5px 10px rgba(13, 39, 80, 0.06);
+      font-size: 0.83rem;
+      color: var(--text-sub);
+      line-height: 1.55;
+    }
+    .test-note-inner span.material-symbols-outlined {
+      font-size: 18px;
+      color: #b08000;
+      flex-shrink: 0;
+      margin-top: 0.05rem;
+    }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <div class="page">
+
+    <a class="back-link" href="index.html">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      Volver al inicio
+    </a>
+
+    <div class="page-header" id="page-header">
+      <h1>Visor de <span>mapas</span></h1>
+      <p>Seleccioná la capa que querés explorar. Cada capa muestra datos georreferenciados de Comodoro Rivadavia.</p>
+    </div>
+
+    <p class="section-label">Capas disponibles</p>
+
+    <div class="layers-grid" id="layers-grid">
+
+      <a class="layer-card" href="visor.html?capa=rampas_accesibilidad" aria-label="Ver capa: Rampas de accesibilidad">
+        <div class="card-accent-bar" style="background:#006A87"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#d6eef4"/>
+            <line x1="0" y1="46" x2="320" y2="46" stroke="rgba(0,80,110,0.12)" stroke-width="1"/>
+            <line x1="0" y1="93" x2="320" y2="93" stroke="rgba(0,80,110,0.12)" stroke-width="1"/>
+            <line x1="106" y1="0" x2="106" y2="140" stroke="rgba(0,80,110,0.12)" stroke-width="1"/>
+            <line x1="213" y1="0" x2="213" y2="140" stroke="rgba(0,80,110,0.12)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="320" y2="70" stroke="rgba(0,80,110,0.22)" stroke-width="2.5"/>
+            <line x1="160" y1="0" x2="160" y2="140" stroke="rgba(0,80,110,0.22)" stroke-width="2.5"/>
+            <line x1="0" y1="35" x2="320" y2="35" stroke="rgba(0,80,110,0.1)" stroke-width="1.5"/>
+            <line x1="0" y1="105" x2="320" y2="105" stroke="rgba(0,80,110,0.1)" stroke-width="1.5"/>
+            <line x1="80" y1="0" x2="80" y2="140" stroke="rgba(0,80,110,0.1)" stroke-width="1.5"/>
+            <line x1="240" y1="0" x2="240" y2="140" stroke="rgba(0,80,110,0.1)" stroke-width="1.5"/>
+            <circle cx="45"  cy="35"  r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="80"  cy="70"  r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="80"  cy="105" r="4" fill="#27ae60" opacity="0.85"/>
+            <circle cx="130" cy="35"  r="4" fill="#e08c00" opacity="0.85"/>
+            <circle cx="160" cy="70"  r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="160" cy="35"  r="4" fill="#27ae60" opacity="0.85"/>
+            <circle cx="160" cy="105" r="4" fill="#e08c00" opacity="0.85"/>
+            <circle cx="213" cy="70"  r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="240" cy="35"  r="4" fill="#8e44ad" opacity="0.85"/>
+            <circle cx="240" cy="105" r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="285" cy="70"  r="4" fill="#27ae60" opacity="0.85"/>
+            <circle cx="45"  cy="105" r="4" fill="#006A87" opacity="0.85"/>
+            <circle cx="45"  cy="70"  r="3.5" fill="#95a5a6" opacity="0.75"/>
+            <circle cx="130" cy="105" r="3.5" fill="#006A87" opacity="0.85"/>
+            <circle cx="285" cy="35"  r="3.5" fill="#e08c00" opacity="0.75"/>
+            <circle cx="285" cy="105" r="3.5" fill="#8e44ad" opacity="0.75"/>
+            <rect x="8" y="118" width="96" height="16" rx="8" fill="rgba(0,106,135,0.15)"/>
+            <text x="56" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#006A87">789 puntos relevados</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#006A87" aria-hidden="true">accessible</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Rampas de accesibilidad</div>
+              <div class="card-subtitle">Puntos · 789 registros</div>
+            </div>
+          </div>
+          <p class="card-desc">Estado de las rampas peatonales en intersecciones de Comodoro Rivadavia. Filtros por estado y barrio.</p>
+          <div class="card-footer">
+            <span class="card-tag active">Activa</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=barrios_poblacion" aria-label="Ver capa: Población por barrios">
+        <div class="card-accent-bar" style="background:#7b5ea7"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#ece8f5"/>
+            <polygon points="20,20 90,15 100,60 60,75 15,55"      fill="rgba(123,94,167,0.55)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="90,15 170,10 175,55 140,70 100,60"   fill="rgba(123,94,167,0.35)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="170,10 255,18 260,65 210,75 175,55"  fill="rgba(123,94,167,0.65)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="255,18 310,25 308,80 260,65"         fill="rgba(123,94,167,0.28)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="15,55 60,75 70,120 10,115"           fill="rgba(123,94,167,0.42)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="60,75 100,60 140,70 145,118 70,120"  fill="rgba(123,94,167,0.70)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="140,70 175,55 210,75 215,120 145,118" fill="rgba(123,94,167,0.30)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <polygon points="210,75 260,65 308,80 305,125 215,120" fill="rgba(123,94,167,0.55)" stroke="#7b5ea7" stroke-width="1.2"/>
+            <rect x="8" y="6" width="10" height="10" rx="2" fill="rgba(123,94,167,0.28)"/>
+            <rect x="8" y="20" width="10" height="10" rx="2" fill="rgba(123,94,167,0.50)"/>
+            <rect x="8" y="34" width="10" height="10" rx="2" fill="rgba(123,94,167,0.72)"/>
+            <text x="22" y="14"  font-family="Inter,sans-serif" font-size="7.5" fill="#5a3e82">Baja</text>
+            <text x="22" y="28"  font-family="Inter,sans-serif" font-size="7.5" fill="#5a3e82">Media</text>
+            <text x="22" y="42"  font-family="Inter,sans-serif" font-size="7.5" fill="#5a3e82">Alta</text>
+            <rect x="8" y="118" width="106" height="16" rx="8" fill="rgba(123,94,167,0.18)"/>
+            <text x="61" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#6a3fa0">77 barrios · Comodoro Rivadavia</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#7b5ea7" aria-hidden="true">holiday_village</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Población por barrios</div>
+              <div class="card-subtitle">Polígonos · 77 barrios</div>
+            </div>
+          </div>
+          <p class="card-desc">Población y densidad poblacional por barrio. Mapa coroplético con escala de intensidad según densidad.</p>
+          <div class="card-footer">
+            <span class="card-tag active">Activa</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=barrios_sexo" aria-label="Ver capa: Sexo por barrios">
+        <div class="card-accent-bar" style="background:#b5546a"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#f5eaed"/>
+            <polygon points="20,20 90,15 100,60 60,75 15,55"      fill="rgba(181,84,106,0.60)" stroke="#b5546a" stroke-width="1.2"/>
+            <polygon points="90,15 170,10 175,55 140,70 100,60"   fill="rgba(100,149,200,0.40)" stroke="#5a8fc0" stroke-width="1.2"/>
+            <polygon points="170,10 255,18 260,65 210,75 175,55"  fill="rgba(181,84,106,0.35)" stroke="#b5546a" stroke-width="1.2"/>
+            <polygon points="255,18 310,25 308,80 260,65"         fill="rgba(100,149,200,0.55)" stroke="#5a8fc0" stroke-width="1.2"/>
+            <polygon points="15,55 60,75 70,120 10,115"           fill="rgba(181,84,106,0.45)" stroke="#b5546a" stroke-width="1.2"/>
+            <polygon points="60,75 100,60 140,70 145,118 70,120"  fill="rgba(100,149,200,0.30)" stroke="#5a8fc0" stroke-width="1.2"/>
+            <polygon points="140,70 175,55 210,75 215,120 145,118" fill="rgba(181,84,106,0.70)" stroke="#b5546a" stroke-width="1.2"/>
+            <polygon points="210,75 260,65 308,80 305,125 215,120" fill="rgba(100,149,200,0.45)" stroke="#5a8fc0" stroke-width="1.2"/>
+            <rect x="8" y="6"  width="10" height="10" rx="2" fill="rgba(181,84,106,0.65)"/>
+            <rect x="8" y="20" width="10" height="10" rx="2" fill="rgba(180,180,180,0.60)"/>
+            <rect x="8" y="34" width="10" height="10" rx="2" fill="rgba(100,149,200,0.60)"/>
+            <text x="22" y="14"  font-family="Inter,sans-serif" font-size="7.5" fill="#8a2f42">Mayor % mujeres</text>
+            <text x="22" y="28"  font-family="Inter,sans-serif" font-size="7.5" fill="#666">Equilibrado</text>
+            <text x="22" y="42"  font-family="Inter,sans-serif" font-size="7.5" fill="#2a5f8a">Mayor % varones</text>
+            <rect x="8" y="118" width="106" height="16" rx="8" fill="rgba(181,84,106,0.18)"/>
+            <text x="61" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#b5546a">77 barrios · Censo 2022</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#b5546a" aria-hidden="true">group</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Sexo por barrios</div>
+              <div class="card-subtitle">Polígonos · 77 barrios</div>
+            </div>
+          </div>
+          <p class="card-desc">Distribución de mujeres, varones y población total por barrio. Coroplético por porcentaje de mujeres.</p>
+          <div class="card-footer">
+            <span class="card-tag active">Activa</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=barrios_nivel_instruccion" aria-label="Ver capa: Nivel de instrucción por barrios">
+        <div class="card-accent-bar" style="background:#1a7a9a"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#e8f4f8"/>
+            <polygon points="20,20 90,15 100,60 60,75 15,55"       fill="rgba(33,113,181,0.55)"  stroke="#2171b5" stroke-width="1.2"/>
+            <polygon points="90,15 170,10 175,55 140,70 100,60"    fill="rgba(107,174,214,0.50)" stroke="#6baed6" stroke-width="1.2"/>
+            <polygon points="170,10 255,18 260,65 210,75 175,55"   fill="rgba(33,113,181,0.75)"  stroke="#2171b5" stroke-width="1.2"/>
+            <polygon points="255,18 310,25 308,80 260,65"          fill="rgba(107,174,214,0.35)" stroke="#6baed6" stroke-width="1.2"/>
+            <polygon points="15,55 60,75 70,120 10,115"            fill="rgba(8,69,148,0.65)"    stroke="#084594" stroke-width="1.2"/>
+            <polygon points="60,75 100,60 140,70 145,118 70,120"   fill="rgba(107,174,214,0.60)" stroke="#6baed6" stroke-width="1.2"/>
+            <polygon points="140,70 175,55 210,75 215,120 145,118" fill="rgba(33,113,181,0.45)"  stroke="#2171b5" stroke-width="1.2"/>
+            <polygon points="210,75 260,65 308,80 305,125 215,120" fill="rgba(8,69,148,0.50)"    stroke="#084594" stroke-width="1.2"/>
+            <rect x="8" y="6"  width="10" height="10" rx="2" fill="rgba(107,174,214,0.40)"/>
+            <rect x="8" y="20" width="10" height="10" rx="2" fill="rgba(33,113,181,0.55)"/>
+            <rect x="8" y="34" width="10" height="10" rx="2" fill="rgba(8,69,148,0.70)"/>
+            <text x="22" y="14"  font-family="Inter,sans-serif" font-size="7.5" fill="#2a5f8a">Bajo</text>
+            <text x="22" y="28"  font-family="Inter,sans-serif" font-size="7.5" fill="#2a5f8a">Medio</text>
+            <text x="22" y="42"  font-family="Inter,sans-serif" font-size="7.5" fill="#2a5f8a">Alto</text>
+            <rect x="8" y="118" width="134" height="16" rx="8" fill="rgba(26,122,154,0.15)"/>
+            <text x="75" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1a7a9a">77 barrios · 200.209 personas</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#1a7a9a" aria-hidden="true">school</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Nivel de instrucción por barrios</div>
+              <div class="card-subtitle">Polígonos · 77 barrios</div>
+            </div>
+          </div>
+          <p class="card-desc">Distribución de niveles educativos por barrio. Selector de indicador: sin instrucción, primario, secundario, superior y superior completo.</p>
+          <div class="card-footer">
+            <span class="card-tag active">Activa</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=establecimientos_educativos" aria-label="Ver capa: Establecimientos educativos">
+        <div class="card-accent-bar" style="background:#e08c00"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#fef3e2"/>
+            <line x1="0" y1="46" x2="320" y2="46" stroke="rgba(160,80,0,0.1)" stroke-width="1"/>
+            <line x1="0" y1="93" x2="320" y2="93" stroke="rgba(160,80,0,0.1)" stroke-width="1"/>
+            <line x1="106" y1="0" x2="106" y2="140" stroke="rgba(160,80,0,0.1)" stroke-width="1"/>
+            <line x1="213" y1="0" x2="213" y2="140" stroke="rgba(160,80,0,0.1)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="320" y2="70" stroke="rgba(160,80,0,0.18)" stroke-width="2.5"/>
+            <line x1="160" y1="0" x2="160" y2="140" stroke="rgba(160,80,0,0.18)" stroke-width="2.5"/>
+            <line x1="0" y1="35" x2="320" y2="35" stroke="rgba(160,80,0,0.09)" stroke-width="1.5"/>
+            <line x1="0" y1="105" x2="320" y2="105" stroke="rgba(160,80,0,0.09)" stroke-width="1.5"/>
+            <line x1="80" y1="0" x2="80" y2="140" stroke="rgba(160,80,0,0.09)" stroke-width="1.5"/>
+            <line x1="240" y1="0" x2="240" y2="140" stroke="rgba(160,80,0,0.09)" stroke-width="1.5"/>
+            <circle cx="55"  cy="40"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="95"  cy="75"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="140" cy="30"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="170" cy="80"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="210" cy="45"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="255" cy="90"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="290" cy="40"  r="4.5" fill="#e08c00" opacity="0.9"/>
+            <circle cx="75"  cy="110" r="4"   fill="#e08c00" opacity="0.8"/>
+            <circle cx="195" cy="115" r="4"   fill="#e08c00" opacity="0.8"/>
+            <circle cx="120" cy="95"  r="3.5" fill="#e08c00" opacity="0.75"/>
+            <circle cx="230" cy="70"  r="3.5" fill="#e08c00" opacity="0.75"/>
+            <circle cx="30"  cy="80"  r="3.5" fill="#e08c00" opacity="0.75"/>
+            <rect x="8" y="118" width="100" height="16" rx="8" fill="rgba(224,140,0,0.18)"/>
+            <text x="58" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#b06000">412 puntos · prueba</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#e08c00" aria-hidden="true">school</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Establecimientos educativos</div>
+              <div class="card-subtitle">Puntos · 412 registros</div>
+            </div>
+          </div>
+          <p class="card-desc">Escuelas, colegios e institutos de Comodoro Rivadavia georeferenciados por nivel y tipo.</p>
+          <div class="card-footer">
+            <span class="card-tag test">Datos de prueba</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=salud_publica" aria-label="Ver capa: Infraestructura de salud pública">
+        <div class="card-accent-bar" style="background:#c0392b"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#fde8e8"/>
+            <line x1="0" y1="46" x2="320" y2="46" stroke="rgba(150,30,20,0.1)" stroke-width="1"/>
+            <line x1="0" y1="93" x2="320" y2="93" stroke="rgba(150,30,20,0.1)" stroke-width="1"/>
+            <line x1="106" y1="0" x2="106" y2="140" stroke="rgba(150,30,20,0.1)" stroke-width="1"/>
+            <line x1="213" y1="0" x2="213" y2="140" stroke="rgba(150,30,20,0.1)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="320" y2="70" stroke="rgba(150,30,20,0.18)" stroke-width="2.5"/>
+            <line x1="160" y1="0" x2="160" y2="140" stroke="rgba(150,30,20,0.18)" stroke-width="2.5"/>
+            <line x1="0" y1="35" x2="320" y2="35" stroke="rgba(150,30,20,0.09)" stroke-width="1.5"/>
+            <line x1="0" y1="105" x2="320" y2="105" stroke="rgba(150,30,20,0.09)" stroke-width="1.5"/>
+            <line x1="80" y1="0" x2="80" y2="140" stroke="rgba(150,30,20,0.09)" stroke-width="1.5"/>
+            <line x1="240" y1="0" x2="240" y2="140" stroke="rgba(150,30,20,0.09)" stroke-width="1.5"/>
+            <circle cx="60"  cy="50"  r="5.5" fill="#c0392b" opacity="0.9"/>
+            <circle cx="120" cy="85"  r="5.5" fill="#c0392b" opacity="0.9"/>
+            <circle cx="185" cy="40"  r="5.5" fill="#c0392b" opacity="0.9"/>
+            <circle cx="245" cy="95"  r="5.5" fill="#c0392b" opacity="0.9"/>
+            <circle cx="290" cy="55"  r="5.5" fill="#c0392b" opacity="0.9"/>
+            <circle cx="30"  cy="100" r="4.5" fill="#c0392b" opacity="0.8"/>
+            <circle cx="155" cy="115" r="4.5" fill="#c0392b" opacity="0.8"/>
+            <circle cx="220" cy="65"  r="4"   fill="#c0392b" opacity="0.75"/>
+            <rect x="56" y="48" width="2" height="6" rx="1" fill="white"/>
+            <rect x="54" y="50" width="6" height="2" rx="1" fill="white"/>
+            <rect x="116" y="83" width="2" height="6" rx="1" fill="white"/>
+            <rect x="114" y="85" width="6" height="2" rx="1" fill="white"/>
+            <rect x="181" y="38" width="2" height="6" rx="1" fill="white"/>
+            <rect x="179" y="40" width="6" height="2" rx="1" fill="white"/>
+            <rect x="241" y="93" width="2" height="6" rx="1" fill="white"/>
+            <rect x="239" y="95" width="6" height="2" rx="1" fill="white"/>
+            <rect x="286" y="53" width="2" height="6" rx="1" fill="white"/>
+            <rect x="284" y="55" width="6" height="2" rx="1" fill="white"/>
+            <rect x="8" y="118" width="112" height="16" rx="8" fill="rgba(192,57,43,0.15)"/>
+            <text x="64" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#922b21">86 puntos · prueba</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#c0392b" aria-hidden="true">local_hospital</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Infraestructura de salud pública</div>
+              <div class="card-subtitle">Puntos · 86 registros</div>
+            </div>
+          </div>
+          <p class="card-desc">Hospitales, centros de salud, dispensarios y efectores sanitarios municipales georeferenciados.</p>
+          <div class="card-footer">
+            <span class="card-tag test">Datos de prueba</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="layer-card" href="visor.html?capa=edificios_municipales" aria-label="Ver capa: Edificios municipales">
+        <div class="card-accent-bar" style="background:#27ae60"></div>
+        <div class="map-preview" aria-hidden="true">
+          <svg viewBox="0 0 320 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <rect width="320" height="140" fill="#e3f5eb"/>
+            <line x1="0" y1="46" x2="320" y2="46" stroke="rgba(20,100,40,0.1)" stroke-width="1"/>
+            <line x1="0" y1="93" x2="320" y2="93" stroke="rgba(20,100,40,0.1)" stroke-width="1"/>
+            <line x1="106" y1="0" x2="106" y2="140" stroke="rgba(20,100,40,0.1)" stroke-width="1"/>
+            <line x1="213" y1="0" x2="213" y2="140" stroke="rgba(20,100,40,0.1)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="320" y2="70" stroke="rgba(20,100,40,0.18)" stroke-width="2.5"/>
+            <line x1="160" y1="0" x2="160" y2="140" stroke="rgba(20,100,40,0.18)" stroke-width="2.5"/>
+            <line x1="0" y1="35" x2="320" y2="35" stroke="rgba(20,100,40,0.09)" stroke-width="1.5"/>
+            <line x1="0" y1="105" x2="320" y2="105" stroke="rgba(20,100,40,0.09)" stroke-width="1.5"/>
+            <line x1="80" y1="0" x2="80" y2="140" stroke="rgba(20,100,40,0.09)" stroke-width="1.5"/>
+            <line x1="240" y1="0" x2="240" y2="140" stroke="rgba(20,100,40,0.09)" stroke-width="1.5"/>
+            <rect x="46" y="42" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="96" y="77" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="145" y="32" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="178" y="82" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="225" y="48" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="266" y="90" width="10" height="10" rx="2" fill="#27ae60" opacity="0.9"/>
+            <rect x="295" y="42" width="9"  height="9"  rx="2" fill="#27ae60" opacity="0.85"/>
+            <rect x="38" y="102" width="9" height="9" rx="2" fill="#27ae60" opacity="0.8"/>
+            <rect x="155" y="108" width="9" height="9" rx="2" fill="#27ae60" opacity="0.8"/>
+            <rect x="60"  y="60"  width="8" height="8" rx="2" fill="#27ae60" opacity="0.7"/>
+            <rect x="205" y="110" width="8" height="8" rx="2" fill="#27ae60" opacity="0.7"/>
+            <rect x="8" y="118" width="106" height="16" rx="8" fill="rgba(39,174,96,0.18)"/>
+            <text x="61" y="129" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="600" fill="#1e8449">123 puntos · prueba</text>
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined" style="color:#27ae60" aria-hidden="true">apartment</span>
+            </div>
+            <div class="card-title-block">
+              <div class="card-title">Edificios municipales</div>
+              <div class="card-subtitle">Puntos · 123 registros</div>
+            </div>
+          </div>
+          <p class="card-desc">Sedes, delegaciones, centros comunitarios y dependencias del Municipio de Comodoro Rivadavia.</p>
+          <div class="card-footer">
+            <span class="card-tag test">Datos de prueba</span>
+            <span class="material-symbols-outlined card-arrow" aria-hidden="true">arrow_forward</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="test-note" id="test-note">
+    <div class="test-note-inner">
+      <span class="material-symbols-outlined" aria-hidden="true">info</span>
+      <span>Las capas marcadas como <strong>datos de prueba</strong> están definidas estructuralmente pero aún no cuentan con datos reales cargados. Al abrirlas el visor mostrará un estado de marcador de posición hasta que se integren los datos correspondientes.</span>
+    </div>
+  </div>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+
+    setTimeout(() => observer.observe(document.querySelector('.back-link')), 50);
+    setTimeout(() => observer.observe(document.getElementById('page-header')), 100);
+
+    document.querySelectorAll('.layer-card').forEach((el, i) => {
+      setTimeout(() => observer.observe(el), 250 + i * 100);
+    });
+
+    setTimeout(() => observer.observe(document.getElementById('test-note')), 700);
+  </script>
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

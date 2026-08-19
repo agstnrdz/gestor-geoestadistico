@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo de metadatos | DGMIT</title>
+  <meta name="description" content="Catálogo de datasets georreferenciados del Departamento de Geoestadísticas, DGMIT." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <style>
+    :root {
+      --sheet-header-bg: #d4d8d6;
+      --sheet-row-odd:   rgba(255,255,255,0.55);
+      --sheet-row-even:  rgba(255,255,255,0.18);
+      --sheet-border:    rgba(0,0,0,0.09);
+      --sheet-hover:     rgba(0,106,135,0.07);
+    }
+
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 2.5rem 2rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .hero.visible  { opacity: 1; transform: translateY(0); }
+    .hero h1 {
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 500;
+      color: #070707;
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p       { font-size: 0.97rem; color: var(--text-sub); line-height: 1.6; }
+
+    .stats-row {
+      max-width: 1100px;
+      margin: 1.5rem auto 0;
+      padding: 0 2.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      border-radius: 99px;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      box-shadow:
+        inset -4px -4px 8px #FFFFFF,
+        inset 4px 4px 8px rgba(13,39,80,0.07),
+        -6px -6px 12px #FFFFFF,
+        4px 4px 8px rgba(13,39,80,0.05);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .stat-chip.visible { opacity: 1; transform: translateY(0); }
+    .stat-chip strong { color: var(--accent); font-weight: 700; }
+    .stat-chip .icon { font-size: 15px; color: var(--accent); }
+
+    .toolbar {
+      max-width: 1100px;
+      margin: 1.75rem auto 0;
+      padding: 0 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .toolbar.visible { opacity: 1; transform: translateY(0); }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .search-wrap .icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-sub);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.6rem 1rem 0.6rem 2.6rem;
+      border: none;
+      outline: none;
+      border-radius: 99px;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      box-shadow:
+        inset 4px 4px 10px rgba(13,39,80,0.1),
+        inset -3px -3px 8px #FFFFFF;
+    }
+    .search-input::placeholder { color: #aaa; }
+
+    .filter-select {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      padding: 0.55rem 1rem;
+      border: none;
+      outline: none;
+      border-radius: 99px;
+      background: var(--bg);
+      color: var(--text-sub);
+      cursor: pointer;
+      box-shadow:
+        inset 3px 3px 8px rgba(13,39,80,0.08),
+        inset -3px -3px 7px #FFFFFF;
+    }
+
+    .results-count {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+
+    .sheet-outer {
+      max-width: 1100px;
+      margin: 1.25rem auto 0;
+      padding: 0 2.5rem 5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .sheet-outer.visible { opacity: 1; transform: translateY(0); }
+
+    .sheet-card {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset 23px 23px 54px rgba(13,39,80,0.04),
+        -31px -31px 43px #FFFFFF,
+        8px 8px 10px rgba(13,39,80,0.04);
+      overflow: hidden;
+    }
+
+    .sheet-scroll {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    .sheet-scroll::-webkit-scrollbar {
+      height: 8px;
+    }
+    .sheet-scroll::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.04);
+      border-radius: 4px;
+    }
+    .sheet-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0,106,135,0.25);
+      border-radius: 4px;
+    }
+    .sheet-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(0,106,135,0.45);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 1600px;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #3a3a3a;
+      padding: 0.55rem 0.75rem;
+      border-right: 1px solid var(--sheet-border);
+      border-bottom: 2px solid rgba(0,0,0,0.12);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      background: var(--sheet-header-bg);
+    }
+    thead th:last-child { border-right: none; }
+    thead th:hover { color: var(--accent); background: #cdd1cf; }
+    thead th.sorted { color: var(--accent); }
+    thead th .sort-icon {
+      font-size: 13px;
+      vertical-align: middle;
+      opacity: 0.35;
+      margin-left: 2px;
+    }
+    thead th.sorted .sort-icon { opacity: 1; }
+
+    thead th:first-child,
+    tbody td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background: var(--sheet-header-bg);
+      border-right: 2px solid rgba(0,0,0,0.12) !important;
+    }
+    tbody td:first-child {
+      background: #dde0df;
+      color: #888;
+      font-size: 0.72rem;
+      text-align: center;
+    }
+
+    tbody tr:nth-child(odd)  td { background: var(--sheet-row-odd); }
+    tbody tr:nth-child(even) td { background: var(--sheet-row-even); }
+    tbody tr:hover td { background: var(--sheet-hover) !important; }
+
+    tbody td {
+      padding: 0.38rem 0.75rem;
+      border-right: 1px solid var(--sheet-border);
+      border-bottom: 1px solid var(--sheet-border);
+      vertical-align: middle;
+      white-space: nowrap;
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-main);
+    }
+    tbody td:last-child { border-right: none; }
+
+    .col-num   { width: 40px; }
+    .col-id    { width: 60px; font-family: monospace; font-size: 0.78rem; color: var(--accent); }
+    .col-nom   { min-width: 180px; font-weight: 500; }
+    .col-geom  { width: 90px; }
+    .col-crs   { width: 100px; font-family: monospace; font-size: 0.77rem; color: #666; }
+    .col-cat   { min-width: 160px; }
+    .col-desc  { min-width: 200px; }
+    .col-reg   { width: 80px; text-align: right; color: var(--text-sub); }
+    .col-est   { width: 120px; }
+    .col-visor { width: 120px; }
+    .col-vdia  { width: 70px; text-align: center; }
+    .col-camp  { min-width: 220px; color: var(--text-sub); font-size: 0.77rem; }
+    .col-ncam  { width: 70px; text-align: right; color: var(--text-sub); }
+    .col-fcrea { width: 100px; color: var(--text-sub); }
+    .col-fmod  { width: 100px; color: var(--text-sub); }
+    .col-ver   { width: 70px; text-align: center; color: var(--text-sub); }
+    .col-fmt   { min-width: 150px; font-family: monospace; font-size: 0.77rem; color: #555; }
+    .col-vinc  { min-width: 160px; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+    }
+    .badge-entregado  { background: rgba(0,106,135,0.12); color: var(--accent); }
+    .badge-publicado  { background: rgba(30,130,60,0.12); color: #1a7a38; }
+    .badge-desarrollo { background: rgba(170,110,0,0.12); color: #8a6000; }
+    .badge-pendiente  { background: rgba(0,0,0,0.07); color: #888; }
+
+    .geom-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+    .geom-pill .material-symbols-outlined { font-size: 14px; color: var(--accent); }
+
+    .no-results {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      display: none;
+    }
+    .no-results .material-symbols-outlined {
+      font-size: 40px;
+      display: block;
+      margin: 0 auto 0.75rem;
+      opacity: 0.3;
+    }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <section class="hero" id="hero">
+    <a class="back-link" id="back" href="index.html">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Volver al inicio
+    </a>
+    <h1>Catálogo de <span>metadatos</span></h1>
+    <p>Registro de datasets georreferenciados del Departamento de Geoestadísticas.</p>
+  </section>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="toolbar" id="toolbar">
+    <div class="search-wrap">
+      <span class="material-symbols-outlined icon">search</span>
+      <input class="search-input" id="search" type="search" placeholder="Buscar dataset, categoría, campos…" autocomplete="off" />
+    </div>
+    <select class="filter-select" id="filter-estado-interno">
+      <option value="">Estado interno</option>
+      <option value="Entregado">Entregado</option>
+      <option value="En desarrollo">En desarrollo</option>
+      <option value="Pendiente">Pendiente</option>
+    </select>
+    <select class="filter-select" id="filter-estado-visor">
+      <option value="">Estado visor</option>
+      <option value="Publicado">Publicado</option>
+      <option value="En desarrollo">En desarrollo</option>
+      <option value="Pendiente">Pendiente</option>
+    </select>
+    <select class="filter-select" id="filter-geom">
+      <option value="">Geometría</option>
+      <option value="Puntos">Puntos</option>
+      <option value="Polígonos">Polígonos</option>
+      <option value="Líneas">Líneas</option>
+      <option value="Tabla">Tabla</option>
+    </select>
+    <span class="results-count" id="results-count"></span>
+  </div>
+
+  <div class="sheet-outer" id="sheet-outer">
+    <div class="sheet-card">
+      <div class="sheet-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-num">#</th>
+              <th class="col-id" data-key="prefijo">ID <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-nom" data-key="nombre">Nombre dataset <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-geom" data-key="tipo_geom">Geometría <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-crs" data-key="crs">CRS <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-cat" data-key="categoria">Categoría <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-desc" data-key="descripcion">Descripción <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-reg" data-key="registros_cant">Registros <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-est" data-key="estado_interno">Estado interno <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-visor" data-key="estado_visor">Estado visor <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-vdia" data-key="visor_al_dia">Visor ✓ <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-camp" data-key="campos">Campos <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-ncam" data-key="campos_cant">N° campos <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-fcrea" data-key="fecha_crea">Fecha creación <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-fmod" data-key="fecha_ult_mod">Última mod. <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-ver" data-key="version">Versión <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-fmt" data-key="formatos">Formatos <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+              <th class="col-vinc" data-key="vinculo">Vínculo <span class="material-symbols-outlined sort-icon">unfold_more</span></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="no-results" id="no-results">
+          <span class="material-symbols-outlined">search_off</span>
+          Sin resultados para la búsqueda actual.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/data/catalogo_data.js"></script>
+  <script>
+    const norm = s => (s || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+    function badgeEstado(val) {
+      if (!val) return '<span class="badge badge-pendiente">—</span>';
+      const cls = val === 'Entregado' ? 'badge-entregado'
+                : val === 'Publicado' ? 'badge-publicado'
+                : val === 'En desarrollo' ? 'badge-desarrollo'
+                : 'badge-pendiente';
+      return `<span class="badge ${cls}">${val}</span>`;
+    }
+
+    const GEOM_ICON = {
+      'Puntos': 'scatter_plot',
+      'Polígonos': 'pentagon',
+      'Líneas': 'polyline',
+      'Tabla': 'table_chart',
+    };
+    function geomPill(val) {
+      if (!val) return '—';
+      const icon = GEOM_ICON[val] || 'category';
+      return `<span class="geom-pill"><span class="material-symbols-outlined">${icon}</span>${val}</span>`;
+    }
+
+    function esc(s) {
+      if (s == null) return '—';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    let sortKey = null, sortDir = 1;
+
+    function buildRow(d, rowNum) {
+      return `<tr>
+        <td class="col-num">${rowNum}</td>
+        <td class="col-id">${esc(d.prefijo)}</td>
+        <td class="col-nom" title="${esc(d.nombre)}">${esc(d.nombre)}</td>
+        <td class="col-geom">${geomPill(d.tipo_geom)}</td>
+        <td class="col-crs">${esc(d.crs)}</td>
+        <td class="col-cat" title="${esc(d.categoria)}">${esc(d.categoria)}</td>
+        <td class="col-desc" title="${esc(d.descripcion)}">${esc(d.descripcion)}</td>
+        <td class="col-reg">${d.registros_cant != null ? d.registros_cant.toLocaleString('es-AR') : '—'}</td>
+        <td class="col-est">${badgeEstado(d.estado_interno)}</td>
+        <td class="col-visor">${badgeEstado(d.estado_visor)}</td>
+        <td class="col-vdia">${esc(d.visor_al_dia) || '—'}</td>
+        <td class="col-camp" title="${esc(d.campos)}">${esc(d.campos)}</td>
+        <td class="col-ncam">${d.campos_cant != null ? d.campos_cant : '—'}</td>
+        <td class="col-fcrea">${esc(d.fecha_crea)}</td>
+        <td class="col-fmod">${esc(d.fecha_ult_mod)}</td>
+        <td class="col-ver">${esc(d.version)}</td>
+        <td class="col-fmt" title="${esc(d.formatos)}">${esc(d.formatos)}</td>
+        <td class="col-vinc" title="${esc(d.vinculo)}">${esc(d.vinculo)}</td>
+      </tr>`;
+    }
+
+    function getFiltered() {
+      const q    = norm(document.getElementById('search').value);
+      const eInt = document.getElementById('filter-estado-interno').value;
+      const eVis = document.getElementById('filter-estado-visor').value;
+      const geom = document.getElementById('filter-geom').value;
+
+      return window.CATALOGO_DATA.filter(d => {
+        if (eInt && d.estado_interno !== eInt) return false;
+        if (eVis && d.estado_visor  !== eVis) return false;
+        if (geom && d.tipo_geom     !== geom) return false;
+        if (q) {
+          const haystack = norm([d.nombre, d.descripcion, d.categoria,
+                                 d.campos, d.prefijo, d.crs].join(' '));
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function getSorted(rows) {
+      if (!sortKey) return rows;
+      return [...rows].sort((a, b) => {
+        const va = a[sortKey] ?? '';
+        const vb = b[sortKey] ?? '';
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sortDir;
+        return String(va).localeCompare(String(vb), 'es') * sortDir;
+      });
+    }
+
+    function render() {
+      const filtered = getSorted(getFiltered());
+      const tbody = document.getElementById('tbody');
+      const noRes = document.getElementById('no-results');
+      document.getElementById('results-count').textContent =
+        `${filtered.length} de ${window.CATALOGO_DATA.length}`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+      } else {
+        noRes.style.display = 'none';
+        tbody.innerHTML = filtered.map((d, i) => buildRow(d, i + 1)).join('');
+      }
+    }
+
+    document.querySelectorAll('thead th[data-key]').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.key;
+        if (sortKey === key) {
+          sortDir *= -1;
+        } else {
+          sortKey = key;
+          sortDir = 1;
+        }
+        document.querySelectorAll('thead th').forEach(t => t.classList.remove('sorted'));
+        th.classList.add('sorted');
+        th.querySelector('.sort-icon').textContent =
+          sortDir === 1 ? 'arrow_downward' : 'arrow_upward';
+        render();
+      });
+    });
+
+    ['search','filter-estado-interno','filter-estado-visor','filter-geom'].forEach(id => {
+      document.getElementById(id).addEventListener('input', render);
+      document.getElementById(id).addEventListener('change', render);
+    });
+
+    function buildStats() {
+      const data = window.CATALOGO_DATA;
+      const total     = data.length;
+      const publicados = data.filter(d => d.estado_visor === 'Publicado').length;
+      const entregados = data.filter(d => d.estado_interno === 'Entregado').length;
+      const totalReg   = data.reduce((s, d) => s + (d.registros_cant || 0), 0);
+
+      const chips = [
+        { icon: 'dataset', label: `<strong>${total}</strong> datasets` },
+        { icon: 'public', label: `<strong>${publicados}</strong> publicados en visor` },
+        { icon: 'task_alt', label: `<strong>${entregados}</strong> entregados` },
+        { icon: 'pin', label: `<strong>${totalReg.toLocaleString('es-AR')}</strong> registros totales` },
+      ];
+      document.getElementById('stats-row').innerHTML = chips.map(c =>
+        `<div class="stat-chip">
+           <span class="material-symbols-outlined icon">${c.icon}</span>
+           <span>${c.label}</span>
+         </div>`
+      ).join('');
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+
+    setTimeout(() => document.getElementById('back').classList.add('visible'), 50);
+    setTimeout(() => observer.observe(document.getElementById('hero')), 100);
+    setTimeout(() => {
+      buildStats();
+      document.querySelectorAll('.stat-chip').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 70);
+      });
+    }, 200);
+    setTimeout(() => observer.observe(document.getElementById('toolbar')), 250);
+    setTimeout(() => observer.observe(document.getElementById('sheet-outer')), 300);
+
+    render();
+  </script>
+
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

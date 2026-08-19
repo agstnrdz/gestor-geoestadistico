@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nomenclador | DGMIT</title>
+  <meta name="description" content="Buscador interactivo de calles y barrios de Comodoro Rivadavia." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <style>
+    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 2.5rem 5rem; }
+
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 {
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+      margin-bottom: 0.5rem;
+    }
+    .page-header p { font-size: 1rem; line-height: 1.7; }
+
+    .tabs-wrap {
+      margin-bottom: 2rem;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease 0.05s, transform 0.5s ease 0.05s;
+    }
+    .tabs-wrap.visible { opacity: 1; transform: translateY(0); }
+
+    .tabs {
+      display: inline-flex;
+      background: var(--bg);
+      border-radius: 99px;
+      padding: 5px;
+      box-shadow:
+        inset -6px -6px 12px #FFFFFF,
+        inset 6px 6px 12px rgba(13, 39, 80, 0.10);
+      gap: 4px;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 1.3rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: transparent;
+      border: none;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .tab-btn span { font-size: 17px; }
+
+    .tab-btn.active {
+      color: var(--accent);
+      background: var(--bg);
+      box-shadow:
+        -5px -5px 10px #FFFFFF,
+        4px 4px 8px rgba(13, 39, 80, 0.10);
+    }
+    .tab-btn:not(.active):hover { color: var(--text-main); }
+
+    .stat-chips {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
+    }
+    .stat-chips.visible { opacity: 1; transform: translateY(0); }
+
+    .chip {
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      border-radius: 99px;
+      padding: 0.5rem 1.2rem;
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 10px rgba(13, 39, 80, 0.08),
+        -8px -8px 15px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--text-sub);
+    }
+    .chip strong { color: var(--accent); font-weight: 700; }
+    .chip .icon { font-size: 16px; color: var(--accent); }
+
+    .search-wrap {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+      margin-bottom: 1.75rem;
+    }
+    .search-wrap.visible { opacity: 1; transform: translateY(0); }
+
+    .search-inner {
+      position: relative;
+      max-width: 760px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      color: var(--accent);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.7rem 1rem 0.7rem 2.8rem;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+      background: var(--bg);
+      border: none;
+      border-radius: 99px;
+      box-shadow:
+        inset -8px -8px 16px #FFFFFF,
+        inset 8px 8px 16px rgba(13, 39, 80, 0.10);
+      outline: none;
+      transition: box-shadow 0.25s ease;
+    }
+    .search-input::placeholder { color: #999; }
+    .search-input:focus {
+      box-shadow:
+        inset -8px -8px 16px #FFFFFF,
+        inset 8px 8px 16px rgba(13, 39, 80, 0.14),
+        0 0 0 2px rgba(0, 106, 135, 0.18);
+    }
+
+    .search-hint {
+      margin-top: 0.5rem;
+      padding-left: 0.9rem;
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .results-wrap {
+      max-width: 760px;
+    }
+
+    .results-count {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      margin-bottom: 1rem;
+      padding-left: 0.25rem;
+      min-height: 1.2rem;
+    }
+
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .result-card {
+      background: var(--bg);
+      border-radius: 18px;
+      padding: 1rem 1.25rem;
+      box-shadow:
+        inset -6px -6px 12px #FFFFFF,
+        inset 6px 6px 12px rgba(13, 39, 80, 0.05),
+        -10px -10px 18px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      animation: fadeUp 0.25s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -3px -3px 6px #FFFFFF,
+        inset 3px 3px 6px rgba(13, 39, 80, 0.08),
+        -4px -4px 8px #FFFFFF,
+        3px 3px 6px rgba(13, 39, 80, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-icon span { font-size: 18px; color: var(--accent); }
+
+    .result-info { flex: 1; min-width: 0; }
+
+    .result-nombre {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+    .result-nombre mark {
+      background: rgba(0, 106, 135, 0.15);
+      color: var(--accent);
+      border-radius: 3px;
+      padding: 0 1px;
+    }
+
+    .result-sub {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.4;
+    }
+
+    .result-meta-chips {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.4rem;
+    }
+
+    .meta-chip {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      background: rgba(0, 106, 135, 0.07);
+      border-radius: 99px;
+      padding: 0.15rem 0.6rem;
+      white-space: nowrap;
+    }
+    .meta-chip strong { color: var(--accent); font-weight: 600; }
+
+    .zona-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 99px;
+      padding: 0.15rem 0.6rem;
+    }
+    .zona-badge.norte {
+      color: #006A87;
+      background: rgba(0, 106, 135, 0.10);
+    }
+    .zona-badge.sur {
+      color: #5b7a6e;
+      background: rgba(91, 122, 110, 0.12);
+    }
+
+    .result-actions {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      align-self: center;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      color: var(--accent);
+      background: rgba(0, 106, 135, 0.08);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .copy-btn span { font-size: 16px; }
+    .copy-btn:hover { background: rgba(0, 106, 135, 0.18); }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-sub);
+    }
+    .empty-state span {
+      font-size: 48px;
+      color: rgba(0,106,135,0.25);
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+    .empty-state p { font-size: 0.95rem; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+  <script src="assets/data/nomenclador_calles_data.js"></script>
+  <script src="assets/data/nomenclador_barrios_data.js"></script>
+
+  <div class="page-wrap">
+
+    <a href="index.html" class="back-link" id="back-link">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Volver al inicio
+    </a>
+
+    <div class="page-header" id="page-header">
+      <h1>Nomenclador <span>municipal</span></h1>
+      <p>Buscador interactivo del callejero y los barrios de Comodoro Rivadavia.</p>
+      <p>Fuente: Dirección General de Catastro. Actualizado a diciembre de 2025.</p>
+    </div>
+
+    <div class="tabs-wrap" id="tabs-wrap">
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" id="tab-calles" role="tab" aria-selected="true" aria-controls="panel-calles" data-tab="calles">
+          <span class="material-symbols-outlined">signpost</span>
+          Nomenclador de calles
+        </button>
+        <button class="tab-btn" id="tab-barrios" role="tab" aria-selected="false" aria-controls="panel-barrios" data-tab="barrios">
+          <span class="material-symbols-outlined">holiday_village</span>
+          Nomenclador de barrios
+        </button>
+      </div>
+    </div>
+
+    <div class="tab-panel active" id="panel-calles" role="tabpanel" aria-labelledby="tab-calles">
+
+      <div class="stat-chips" id="stat-chips-calles">
+        <div class="chip">
+          <span class="material-symbols-outlined icon">signpost</span>
+          <span>Calles: <strong id="total-calles">—</strong></span>
+        </div>
+        <div class="chip">
+          <span class="material-symbols-outlined icon">info</span>
+          <span>Números de orden de carga disponibles</span>
+        </div>
+      </div>
+
+      <div class="search-wrap" id="search-wrap-calles">
+        <div class="search-inner">
+          <span class="material-symbols-outlined search-icon" aria-hidden="true">search</span>
+          <input
+            type="search"
+            id="search-calles"
+            class="search-input"
+            placeholder="Escribí el nombre de una calle o su código…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Buscar calle"
+          />
+        </div>
+        <p class="search-hint">Ingresá al menos 3 caracteres para ver resultados</p>
+      </div>
+
+      <div class="results-wrap" id="results-wrap-calles">
+        <p class="results-count" id="count-calles" role="status" aria-live="polite"></p>
+        <div class="results-list" id="list-calles"></div>
+      </div>
+
+    </div>
+
+    <div class="tab-panel" id="panel-barrios" role="tabpanel" aria-labelledby="tab-barrios">
+
+      <div class="stat-chips" id="stat-chips-barrios">
+        <div class="chip">
+          <span class="material-symbols-outlined icon">holiday_village</span>
+          <span>Barrios: <strong id="total-barrios">—</strong></span>
+        </div>
+        <div class="chip">
+          <span class="material-symbols-outlined icon">north</span>
+          <span id="chip-norte">— barrios Norte</span>
+        </div>
+        <div class="chip">
+          <span class="material-symbols-outlined icon">south</span>
+          <span id="chip-sur">— barrios Sur</span>
+        </div>
+      </div>
+
+      <div class="search-wrap" id="search-wrap-barrios">
+        <div class="search-inner">
+          <span class="material-symbols-outlined search-icon" aria-hidden="true">search</span>
+          <input
+            type="search"
+            id="search-barrios"
+            class="search-input"
+            placeholder="Escribí el nombre de un barrio o su número…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Buscar barrio"
+          />
+        </div>
+        <p class="search-hint">Ingresá al menos 3 caracteres para ver resultados</p>
+      </div>
+
+      <div class="results-wrap" id="results-wrap-barrios">
+        <p class="results-count" id="count-barrios" role="status" aria-live="polite"></p>
+        <div class="results-list" id="list-barrios"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function normalizar(str) {
+      return str
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .trim();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function highlight(text, query) {
+      const normQ    = normalizar(query);
+      const normText = normalizar(text);
+      const idx = normText.indexOf(normQ);
+      if (idx === -1) return escapeHtml(text);
+      return (
+        escapeHtml(text.slice(0, idx)) +
+        '<mark>' + escapeHtml(text.slice(idx, idx + query.length)) + '</mark>' +
+        escapeHtml(text.slice(idx + query.length))
+      );
+    }
+
+    function attachCopyHandlers(container) {
+      container.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+            const icon = btn.querySelector('span');
+            const origIcon = icon.textContent;
+            icon.textContent = 'check';
+            setTimeout(() => { icon.textContent = origIcon; }, 1800);
+          });
+        });
+      });
+    }
+
+    const tabBtns   = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+
+        tabBtns.forEach(b => {
+          b.classList.toggle('active', b.dataset.tab === target);
+          b.setAttribute('aria-selected', b.dataset.tab === target ? 'true' : 'false');
+        });
+        tabPanels.forEach(p => {
+          p.classList.toggle('active', p.id === 'panel-' + target);
+        });
+
+        const activeInput = document.getElementById('search-' + target);
+        if (activeInput) setTimeout(() => activeInput.focus(), 50);
+      });
+    });
+
+    (function () {
+      const input   = document.getElementById('search-calles');
+      const listEl  = document.getElementById('list-calles');
+      const countEl = document.getElementById('count-calles');
+
+      document.getElementById('total-calles').textContent =
+        NOMENCLADOR_CALLES_DATA.length.toLocaleString('es-AR');
+
+      function buscarCalles(query) {
+        const q         = normalizar(query);
+        const isNumeric = /^\d+$/.test(query.trim());
+        const scored    = [];
+
+        for (const item of NOMENCLADOR_CALLES_DATA) {
+          const normNombre = normalizar(item.nombre);
+          const codigoStr  = item.orden_carga != null ? String(item.orden_carga) : '';
+          let score = 0;
+
+          if (isNumeric) {
+            if (codigoStr === query.trim())        score = 100;
+            else if (codigoStr.startsWith(query.trim())) score = 80;
+            else if (normNombre.includes(q))       score = 40 + (normNombre.startsWith(q) ? 20 : 0);
+          } else {
+            if (normNombre === q)                  score = 100;
+            else if (normNombre.startsWith(q))     score = 80;
+            else if (normNombre.includes(q))       score = 50;
+          }
+
+          if (score > 0) scored.push({ item, score });
+        }
+
+        scored.sort((a, b) => b.score - a.score || a.item.nombre.localeCompare(b.item.nombre, 'es'));
+        return scored.map(s => s.item);
+      }
+
+      function renderCalles(resultados, query) {
+        listEl.innerHTML = '';
+
+        if (resultados.length === 0) {
+          countEl.textContent = '';
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <span class="material-symbols-outlined">search_off</span>
+              <p>No se encontraron calles para <strong>"${escapeHtml(query)}"</strong>.</p>
+            </div>`;
+          return;
+        }
+
+        countEl.textContent = `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''}`;
+
+        resultados.forEach((item, i) => {
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.style.animationDelay = Math.min(i * 30, 300) + 'ms';
+          card.innerHTML = `
+            <div class="result-icon">
+              <span class="material-symbols-outlined">signpost</span>
+            </div>
+            <div class="result-info">
+              <div class="result-nombre">${highlight(item.nombre, query)}</div>
+              <div class="result-sub">${escapeHtml(item.barrio || '—')}</div>
+            </div>
+            <div class="result-actions">
+              <button class="copy-btn" data-copy="${escapeHtml(item.nombre)}" title="Copiar nombre">
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+              ${item.orden_carga != null ? `
+              <button class="copy-btn" data-copy="${item.orden_carga}" title="Copiar código">
+                <span class="material-symbols-outlined">tag</span>
+              </button>` : ''}
+            </div>
+          `;
+          listEl.appendChild(card);
+        });
+
+        attachCopyHandlers(listEl);
+      }
+
+      let timer;
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 3) { listEl.innerHTML = ''; countEl.textContent = ''; return; }
+        timer = setTimeout(() => renderCalles(buscarCalles(q), q), 120);
+      });
+
+      window.addEventListener('DOMContentLoaded', () => input.focus());
+    })();
+
+    (function () {
+      const input   = document.getElementById('search-barrios');
+      const listEl  = document.getElementById('list-barrios');
+      const countEl = document.getElementById('count-barrios');
+
+      const totalBarrios = NOMENCLADOR_BARRIOS_DATA.length;
+      const cantNorte    = NOMENCLADOR_BARRIOS_DATA.filter(b => b.zona_geo === 'Norte').length;
+      const cantSur      = NOMENCLADOR_BARRIOS_DATA.filter(b => b.zona_geo === 'Sur').length;
+
+      document.getElementById('total-barrios').textContent = totalBarrios.toLocaleString('es-AR');
+      document.getElementById('chip-norte').textContent    = cantNorte + ' barrios Norte';
+      document.getElementById('chip-sur').textContent      = cantSur   + ' barrios Sur';
+
+      function buscarBarrios(query) {
+        const q         = normalizar(query);
+        const isNumeric = /^\d+$/.test(query.trim());
+        const scored    = [];
+
+        for (const item of NOMENCLADOR_BARRIOS_DATA) {
+          const normNombre = normalizar(item.nombre);
+          const idStr      = String(item.id);
+          let score = 0;
+
+          if (isNumeric) {
+            if (idStr === query.trim())             score = 100;
+            else if (idStr.startsWith(query.trim())) score = 80;
+            else if (normNombre.includes(q))        score = 40 + (normNombre.startsWith(q) ? 20 : 0);
+          } else {
+            if (normNombre === q)                   score = 100;
+            else if (normNombre.startsWith(q))      score = 80;
+            else if (normNombre.includes(q))        score = 50;
+          }
+
+          if (score > 0) scored.push({ item, score });
+        }
+
+        scored.sort((a, b) => b.score - a.score || a.item.nombre.localeCompare(b.item.nombre, 'es'));
+        return scored.map(s => s.item);
+      }
+
+      function renderBarrios(resultados, query) {
+        listEl.innerHTML = '';
+
+        if (resultados.length === 0) {
+          countEl.textContent = '';
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <span class="material-symbols-outlined">search_off</span>
+              <p>No se encontraron barrios para <strong>"${escapeHtml(query)}"</strong>.</p>
+            </div>`;
+          return;
+        }
+
+        countEl.textContent = `${resultados.length} resultado${resultados.length !== 1 ? 's' : ''}`;
+
+        resultados.forEach((item, i) => {
+          const zonaClass = item.zona_geo ? item.zona_geo.toLowerCase() : '';
+          const ordenanzaStr = item.ordenanza
+            ? `<span class="meta-chip">Ord. <strong>${escapeHtml(item.ordenanza)}</strong></span>`
+            : '';
+
+          const card = document.createElement('div');
+          card.className = 'result-card';
+          card.style.animationDelay = Math.min(i * 30, 300) + 'ms';
+          card.innerHTML = `
+            <div class="result-icon">
+              <span class="material-symbols-outlined">holiday_village</span>
+            </div>
+            <div class="result-info">
+              <div class="result-nombre">${highlight(item.nombre, query)}</div>
+              <div class="result-meta-chips">
+                ${item.zona_geo ? `<span class="zona-badge ${zonaClass}">${escapeHtml(item.zona_geo)}</span>` : ''}
+                ${item.circunscripcion != null ? `<span class="meta-chip">Circ. <strong>${item.circunscripcion}</strong></span>` : ''}
+                ${item.sector ? `<span class="meta-chip">Sector <strong>${escapeHtml(item.sector)}</strong></span>` : ''}
+                ${ordenanzaStr}
+              </div>
+            </div>
+            <div class="result-actions">
+              <button class="copy-btn" data-copy="${escapeHtml(item.nombre)}" title="Copiar nombre">
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+              <button class="copy-btn" data-copy="${item.id}" title="Copiar número">
+                <span class="material-symbols-outlined">tag</span>
+              </button>
+            </div>
+          `;
+          listEl.appendChild(card);
+        });
+
+        attachCopyHandlers(listEl);
+      }
+
+      let timer;
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 3) { listEl.innerHTML = ''; countEl.textContent = ''; return; }
+        timer = setTimeout(() => renderBarrios(buscarBarrios(q), q), 120);
+      });
+    })();
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.05 });
+
+    setTimeout(() => {
+      ['back-link', 'page-header', 'tabs-wrap',
+       'stat-chips-calles', 'search-wrap-calles',
+       'stat-chips-barrios', 'search-wrap-barrios'
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    }, 50);
+  </script>
+
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

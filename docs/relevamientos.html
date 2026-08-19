@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relevamientos en curso | DGMIT</title>
+  <meta name="description" content="Estado y avance de los relevamientos geoespaciales en curso del Departamento de Geoestadísticas, DGMIT, Municipio de Comodoro Rivadavia." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <style>
+    .hero {
+      padding: 2rem 2.5rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .hero.visible { opacity: 1; transform: translateY(0); }
+    .hero h1 {
+      font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+      font-weight: 500;
+      color: #070707;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.6rem;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1rem; color: var(--text-sub); line-height: 1.7; max-width: 560px; }
+
+    .stats-bar {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem 2rem;
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      border-radius: 99px;
+      padding: 0.6rem 1.4rem;
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 10px rgba(13, 39, 80, 0.08),
+        -8px -8px 15px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.92rem;
+      color: var(--text-sub);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .stat-pill.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stat-pill strong { color: var(--accent); font-weight: 700; }
+    .stat-pill .icon { font-size: 16px; color: var(--accent); }
+
+    .filters-bar {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .filter-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.4rem 1.1rem;
+      border-radius: 99px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -4px -4px 8px #FFFFFF,
+        inset 4px 4px 8px rgba(13, 39, 80, 0.07),
+        -5px -5px 10px #FFFFFF,
+        4px 4px 8px rgba(13, 39, 80, 0.05);
+      color: var(--text-sub);
+      transition: color 0.2s, box-shadow 0.2s;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      color: var(--accent);
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 12px rgba(13, 39, 80, 0.11),
+        -3px -3px 6px #FFFFFF,
+        3px 3px 6px rgba(13, 39, 80, 0.07);
+    }
+
+    .cards-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem 5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.75rem;
+    }
+
+    .rel-card {
+      background-color: var(--bg);
+      border-radius: var(--card-radius);
+      padding: 1.4rem 1.5rem 1.25rem;
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset 23px 23px 54px rgba(13, 39, 80, 0.04),
+        -31px -31px 43px #FFFFFF,
+        8px 8px 10px rgba(13, 39, 80, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rel-card.visible { opacity: 1; transform: translateY(0); }
+
+    .rel-card:hover {
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset 23px 23px 54px rgba(13, 39, 80, 0.04),
+        -36px -36px 50px #FFFFFF,
+        12px 12px 18px rgba(13, 39, 80, 0.07);
+    }
+
+    .card-accent-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      border-radius: var(--card-radius) var(--card-radius) 0 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .rel-card:hover .card-accent-bar { opacity: 1; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+    }
+
+    .card-icon-wrap {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 10px rgba(13, 39, 80, 0.08),
+        -8px -8px 15px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-icon-wrap span { font-size: 22px; color: var(--accent); }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--text-main);
+      line-height: 1.35;
+    }
+
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .progress-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .progress-pct {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 99px;
+      background: linear-gradient(145deg, #d5d7d6, #e8eae9);
+      box-shadow:
+        inset 3px 3px 6px rgba(13, 39, 80, 0.1),
+        inset -3px -3px 6px #FFFFFF;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 1s ease;
+    }
+
+    .fill-low    { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+    .fill-mid    { background: linear-gradient(90deg, #d4832a, #e8a040); }
+    .fill-high   { background: linear-gradient(90deg, var(--accent), #4da8c0); }
+    .fill-done   { background: linear-gradient(90deg, #27ae60, #52c97a); }
+
+    .rel-card.low  .card-accent-bar { background: #e74c3c; }
+    .rel-card.mid  .card-accent-bar { background: #e8a040; }
+    .rel-card.high .card-accent-bar { background: var(--accent); }
+    .rel-card.done .card-accent-bar { background: #27ae60; }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.75rem;
+      border-radius: 99px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -3px -3px 6px #FFFFFF,
+        inset 3px 3px 6px rgba(13, 39, 80, 0.08),
+        -4px -4px 8px #FFFFFF,
+        3px 3px 6px rgba(13, 39, 80, 0.05);
+      color: var(--text-sub);
+    }
+
+    .meta-chip .chip-icon { font-size: 14px; }
+
+    .meta-chip.publicado   { color: #27ae60; }
+    .meta-chip.no-publicado { opacity: 0.65; }
+    .meta-chip.en-curso    { color: var(--accent); }
+
+    .card-area {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .card-area span.material-symbols-outlined {
+      font-size: 15px;
+      color: var(--accent);
+      opacity: 0.7;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    .empty-state.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <section class="hero" id="hero">
+    <a class="back-link" id="back" href="index.html">
+      <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+      Volver al inicio
+    </a>
+    <h1>Gestión de <span>Relevamientos</span></h1>
+    <p>Estado y avance de los relevamientos en curso del departamento.</p>
+  </section>
+
+  <div class="stats-bar" id="stats">
+    <div class="stat-pill">
+      <span class="material-symbols-outlined icon" aria-hidden="true">assignment</span>
+      <span>Total: <strong id="stat-total">—</strong></span>
+    </div>
+    <div class="stat-pill">
+      <span class="material-symbols-outlined icon" aria-hidden="true">pending_actions</span>
+      <span>En curso: <strong id="stat-en-curso">—</strong></span>
+    </div>
+    <div class="stat-pill">
+      <span class="material-symbols-outlined icon" aria-hidden="true">data_usage</span>
+      <span>Avance promedio: <strong id="stat-avance">—</strong></span>
+    </div>
+    <div class="stat-pill">
+      <span class="material-symbols-outlined icon" aria-hidden="true">cloud_upload</span>
+      <span>Con avances publicados: <strong id="stat-publicados">—</strong></span>
+    </div>
+  </div>
+
+  <div class="filters-bar" id="filters">
+    <span class="filter-label">Plazo</span>
+    <button class="filter-btn active" data-filter="todos">Todos</button>
+    <button class="filter-btn" data-filter="Mediano">Mediano</button>
+    <button class="filter-btn" data-filter="Largo">Largo</button>
+    <span class="filter-label" style="margin-left:0.75rem;">Ordenar</span>
+    <button class="filter-btn sort-btn active" data-sort="avance-desc">Mayor avance</button>
+    <button class="filter-btn sort-btn" data-sort="avance-asc">Menor avance</button>
+    <button class="filter-btn sort-btn" data-sort="nombre">Nombre</button>
+  </div>
+
+  <section class="cards-section">
+    <div class="grid" id="grid">
+      <div class="empty-state" id="empty">No hay relevamientos que coincidan con el filtro.</div>
+    </div>
+  </section>
+
+  <script>
+    const RELEVAMIENTOS = [
+      {
+        nombre: "Actualización de dataset espacios verdes",
+        area: null,
+        estado: "En curso",
+        plazo: "Largo",
+        avance: 80,
+        publicado: "No",
+        fecha_inicio: "2026-04",
+        periodicidad: "anual"
+      },
+      {
+        nombre: "Relevamiento de rampas de accesibilidad",
+        area: null,
+        estado: "En curso",
+        plazo: "Mediano",
+        avance: 25,
+        publicado: "Si",
+        fecha_inicio: "2026-04",
+        periodicidad: "anual"
+      },
+      {
+        nombre: "Relevamiento de paradas y recorridos de transporte público",
+        area: "Dirección General de Transporte",
+        estado: "En curso",
+        plazo: "Mediano",
+        avance: 5,
+        publicado: "No",
+        fecha_inicio: "2026-04",
+        periodicidad: "anual"
+      },
+      {
+        nombre: "Actualización y normalización de datasets georreferenciados en general",
+        area: null,
+        estado: "En curso",
+        plazo: "Mediano",
+        avance: 100,
+        publicado: "Si",
+        fecha_inicio: "2025-01",
+        periodicidad: "mensual"
+      },
+      {
+        nombre: "Actualización de registro de productores de la agricultura familiar",
+        area: "Subsecretaría de Economía Social",
+        estado: "En curso",
+        plazo: "Largo",
+        avance: 90,
+        publicado: "Si",
+        fecha_inicio: "2025-11",
+        periodicidad: "mensual"
+      },
+      {
+        nombre: "Actualización de datos censales por barrio",
+        area: null,
+        estado: "En curso",
+        plazo: "Largo",
+        avance: 25,
+        publicado: "No",
+        fecha_inicio: "2024-11",
+        periodicidad: "anual"
+      }
+    ];
+
+    function avanceClass(pct) {
+      if (pct === 100) return 'done';
+      if (pct >= 60)  return 'high';
+      if (pct >= 30)  return 'mid';
+      return 'low';
+    }
+
+    function fillClass(pct) {
+      if (pct === 100) return 'fill-done';
+      if (pct >= 60)  return 'fill-high';
+      if (pct >= 30)  return 'fill-mid';
+      return 'fill-low';
+    }
+
+    function formatFecha(f) {
+      if (!f) return '';
+      const [y, m] = f.split('-');
+      const meses = ['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+      return `${meses[parseInt(m)]} ${y}`;
+    }
+
+    function renderCards(data) {
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('empty');
+
+      grid.querySelectorAll('.rel-card').forEach(c => c.remove());
+
+      if (data.length === 0) {
+        empty.classList.add('visible');
+        return;
+      }
+      empty.classList.remove('visible');
+
+      data.forEach((r, i) => {
+        const cls = avanceClass(r.avance);
+        const fCls = fillClass(r.avance);
+
+        const card = document.createElement('div');
+        card.className = `rel-card ${cls}`;
+
+        card.innerHTML = `
+          <div class="card-accent-bar"></div>
+          <div class="card-header">
+            <div class="card-icon-wrap">
+              <span class="material-symbols-outlined">assignment</span>
+            </div>
+            <div class="card-title">${r.nombre}</div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-header">
+              <span class="progress-label">Avance</span>
+              <span class="progress-pct">${r.avance}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill ${fCls}" style="width: 0%" data-target="${r.avance}"></div>
+            </div>
+          </div>
+          <div class="card-meta">
+            <span class="meta-chip en-curso">
+              <span class="material-symbols-outlined chip-icon">pending_actions</span>
+              ${r.estado}
+            </span>
+            <span class="meta-chip">
+              <span class="material-symbols-outlined chip-icon">schedule</span>
+              Plazo ${r.plazo.toLowerCase()}
+            </span>
+            <span class="meta-chip ${r.publicado === 'Si' ? 'publicado' : 'no-publicado'}">
+              <span class="material-symbols-outlined chip-icon">${r.publicado === 'Si' ? 'cloud_done' : 'cloud_off'}</span>
+              ${r.publicado === 'Si' ? 'Publicado' : 'Sin publicar'}
+            </span>
+            <span class="meta-chip">
+              <span class="material-symbols-outlined chip-icon">calendar_month</span>
+              Desde ${formatFecha(r.fecha_inicio)}
+            </span>
+            <span class="meta-chip">
+              <span class="material-symbols-outlined chip-icon">autorenew</span>
+              ${r.periodicidad.charAt(0).toUpperCase() + r.periodicidad.slice(1)}
+            </span>
+          </div>
+          ${r.area ? `
+          <div class="card-area">
+            <span class="material-symbols-outlined">handshake</span>
+            <span>En conjunto con <strong>${r.area}</strong></span>
+          </div>` : ''}
+        `;
+
+        grid.appendChild(card);
+
+        setTimeout(() => {
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                const fill = entry.target.querySelector('.progress-fill');
+                if (fill) {
+                  setTimeout(() => {
+                    fill.style.width = fill.dataset.target + '%';
+                  }, 200);
+                }
+                observer.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.1 });
+          observer.observe(card);
+        }, i * 80);
+      });
+    }
+
+    function updateStats(data) {
+      const enCurso = data.filter(r => r.estado === 'En curso').length;
+      const promedio = data.length
+        ? Math.round(data.reduce((s, r) => s + r.avance, 0) / data.length)
+        : 0;
+      const publicados = data.filter(r => r.publicado === 'Si').length;
+
+      document.getElementById('stat-total').textContent = RELEVAMIENTOS.length;
+      document.getElementById('stat-en-curso').textContent = enCurso;
+      document.getElementById('stat-avance').textContent = promedio + '%';
+      document.getElementById('stat-publicados').textContent = publicados + ' de ' + data.length;
+    }
+
+    let filtroActivo = 'todos';
+    let ordenActivo  = 'avance-desc';
+
+    function getDataFiltradaOrdenada() {
+      let data = filtroActivo === 'todos'
+        ? [...RELEVAMIENTOS]
+        : RELEVAMIENTOS.filter(r => r.plazo === filtroActivo);
+
+      if (ordenActivo === 'avance-desc') data.sort((a, b) => b.avance - a.avance);
+      else if (ordenActivo === 'avance-asc') data.sort((a, b) => a.avance - b.avance);
+      else if (ordenActivo === 'nombre') data.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
+      return data;
+    }
+
+    function refresh() {
+      const data = getDataFiltradaOrdenada();
+      renderCards(data);
+      updateStats(data);
+    }
+
+    document.querySelectorAll('.filter-btn:not(.sort-btn)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filtroActivo = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn:not(.sort-btn)').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        refresh();
+      });
+    });
+
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        ordenActivo = btn.dataset.sort;
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        refresh();
+      });
+    });
+
+    refresh();
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+
+    setTimeout(() => {
+      document.getElementById('back').classList.add('visible');
+      observer.observe(document.getElementById('hero'));
+    }, 50);
+
+    document.querySelectorAll('.stat-pill').forEach((el, i) => {
+      setTimeout(() => observer.observe(el), 150 + i * 80);
+    });
+  </script>
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>

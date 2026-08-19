@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Datos y descargas | DGMIT</title>
+  <meta name="description" content="Acceso a los datasets abiertos del Departamento de Geoestadísticas en formatos GeoJSON, CSV y XLSX para su reutilización." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/index.css" />
+  <style>
+    .page { max-width: 1100px; margin: 0 auto; padding: 3rem 2.5rem 5rem; }
+
+    .license-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--bg);
+      border-radius: 99px;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--accent);
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 10px rgba(13, 39, 80, 0.08),
+        -8px -8px 15px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.06);
+      margin-bottom: 1.5rem;
+    }
+
+    .license-badge span { font-size: 16px; }
+
+    .dataset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .dataset-card {
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 1.25rem 1.5rem;
+      box-shadow:
+        inset -23px -23px 40px #FFFFFF,
+        inset 23px 23px 54px rgba(13, 39, 80, 0.04),
+        -31px -31px 43px #FFFFFF,
+        8px 8px 10px rgba(13, 39, 80, 0.04);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem 1.5rem;
+      align-items: start;
+    }
+
+    .dataset-card .ds-meta { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .dataset-card .ds-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .dataset-card .ds-desc {
+      font-size: 0.87rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .dataset-card .ds-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+    }
+
+    .ds-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+      background: linear-gradient(145deg, #f0f2f1, #d8dad9);
+      box-shadow:
+        inset -3px -3px 6px #FFFFFF,
+        inset 3px 3px 6px rgba(13, 39, 80, 0.08);
+      color: var(--text-sub);
+    }
+
+    .ds-tag.geojson { color: #1a6b38; }
+    .ds-tag.csv     { color: #8b5e00; }
+    .ds-tag.xlsx    { color: #1a5c9c; }
+
+    .ds-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .dl-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      border-radius: 99px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--accent);
+      background: var(--bg);
+      box-shadow:
+        inset -5px -5px 10px #FFFFFF,
+        inset 5px 5px 10px rgba(13, 39, 80, 0.08),
+        -8px -8px 15px #FFFFFF,
+        5px 5px 10px rgba(13, 39, 80, 0.06);
+      transition: box-shadow 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .dl-btn:hover {
+      color: #004f66;
+      box-shadow:
+        inset -3px -3px 6px #FFFFFF,
+        inset 3px 3px 8px rgba(13, 39, 80, 0.12);
+    }
+
+    .dl-btn span { font-size: 15px; }
+
+    .dl-btn.pending {
+      opacity: 0.45;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    @media (max-width: 640px) {
+      .dataset-card { grid-template-columns: 1fr; }
+      .ds-actions { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+      .page { padding: 2rem 1.25rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <script src="assets/js/header.js"></script>
+
+  <main class="page">
+
+    <a class="back-link" href="index.html" id="back">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Volver al inicio
+    </a>
+
+    <div class="page-title-wrap" id="title-wrap">
+      <p class="page-eyebrow">Acceso abierto</p>
+      <h1 class="page-title">Datos y descargas</h1>
+      <p class="page-lead">
+        Los datasets producidos por el Departamento de Geoestadísticas están disponibles
+        para su reutilización por parte de otras áreas municipales, organismos y ciudadanos.
+        Se publican en formatos abiertos e interoperables.
+      </p>
+    </div>
+
+    <div class="divider"></div>
+
+    <section class="content-section" id="sec-licencia">
+      <h2>
+        <span class="material-symbols-outlined sec-icon">gavel</span>
+        Licencia de uso
+      </h2>
+
+      <div class="license-badge">
+        <span class="material-symbols-outlined">verified_user</span>
+        Licencia MIT · mit@comodoro.gov.ar
+      </div>
+
+      <p>
+        Los datos publicados en esta sección se distribuyen bajo
+        <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener" style="color:var(--accent)">Licencia MIT</a>.
+        Podés usar, copiar, modificar y redistribuir libremente con o sin modificaciones,
+        siempre que se mantenga la atribución al Municipio de Comodoro Rivadavia — DGMIT.
+      </p>
+      <p>
+        [Si el municipio tiene una política de datos abiertos o una ordenanza específica,
+        mencionala y vinculala aquí.]
+      </p>
+    </section>
+
+    <section class="content-section" id="sec-datasets">
+      <h2>
+        <span class="material-symbols-outlined sec-icon">folder_open</span>
+        Datasets disponibles
+      </h2>
+
+      <div class="dataset-list">
+
+        <div class="dataset-card">
+          <div class="ds-meta">
+            <span class="ds-name">Rampas de accesibilidad</span>
+            <span class="ds-desc">
+              789 puntos georreferenciados de rampas peatonales relevadas en el ejido urbano.
+              Incluye estado (bueno / regular / malo / sin rampa) y barrio.
+            </span>
+            <div class="ds-tags">
+              <span class="ds-tag geojson">GeoJSON</span>
+              <span class="ds-tag csv">CSV</span>
+            </div>
+          </div>
+          <div class="ds-actions">
+            <a class="dl-btn" href="assets/data/rampas.geojson" download>
+              <span class="material-symbols-outlined">download</span>GeoJSON
+            </a>
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">download</span>CSV
+            </a>
+          </div>
+        </div>
+
+        <div class="dataset-card">
+          <div class="ds-meta">
+            <span class="ds-name">Límites de barrios</span>
+            <span class="ds-desc">
+              77 polígonos con los límites oficiales de los barrios del municipio.
+              Sistema de referencia: WGS 84 (EPSG:4326).
+            </span>
+            <div class="ds-tags">
+              <span class="ds-tag geojson">GeoJSON</span>
+            </div>
+          </div>
+          <div class="ds-actions">
+            <a class="dl-btn" href="assets/data/limites_barrios.geojson" download>
+              <span class="material-symbols-outlined">download</span>GeoJSON
+            </a>
+          </div>
+        </div>
+
+        <div class="dataset-card">
+          <div class="ds-meta">
+            <span class="ds-name">Nomenclador de calles y barrios</span>
+            <span class="ds-desc">
+              3 130 calles del callejero municipal con nombre oficial, barrio y código interno.
+              Fuente: Dirección de Catastro Municipal.
+            </span>
+            <div class="ds-tags">
+              <span class="ds-tag csv">CSV</span>
+              <span class="ds-tag xlsx">XLSX</span>
+            </div>
+          </div>
+          <div class="ds-actions">
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">download</span>CSV
+            </a>
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">download</span>XLSX
+            </a>
+          </div>
+        </div>
+
+        <div class="dataset-card">
+          <div class="ds-meta">
+            <span class="ds-name">Catálogo de metadatos</span>
+            <span class="ds-desc">
+              Listado de los 20 datasets del departamento con descripción, campos, estado
+              y fechas de actualización. Formato tabular.
+            </span>
+            <div class="ds-tags">
+              <span class="ds-tag xlsx">XLSX</span>
+              <span class="ds-tag csv">CSV</span>
+            </div>
+          </div>
+          <div class="ds-actions">
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">download</span>XLSX
+            </a>
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">download</span>CSV
+            </a>
+          </div>
+        </div>
+
+        <div class="dataset-card">
+          <div class="ds-meta">
+            <span class="ds-name">Barrios — población y densidad</span>
+            <span class="ds-desc">
+              Datos de población total y densidad poblacional por barrio.
+              Pendiente de incorporación de datos censales oficiales.
+            </span>
+            <div class="ds-tags">
+              <span class="ds-tag geojson">GeoJSON</span>
+              <span class="ds-tag csv">CSV</span>
+            </div>
+          </div>
+          <div class="ds-actions">
+            <a class="dl-btn pending" href="#" aria-disabled="true">
+              <span class="material-symbols-outlined">hourglass_empty</span>Pendiente
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="content-section" id="sec-solicitar">
+      <h2>
+        <span class="material-symbols-outlined sec-icon">mail</span>
+        Solicitar un dataset
+      </h2>
+      <p>
+        Si necesitás acceder a un dataset que no está publicado aquí, o en un formato
+        específico, podés contactar al departamento por correo electrónico.
+      </p>
+      <p>
+        [Agregá la dirección de correo de contacto, horarios de atención y el tiempo
+        de respuesta estimado para solicitudes de datos.]
+      </p>
+    </section>
+
+    <section class="content-section" id="sec-api">
+      <h2>
+        <span class="material-symbols-outlined sec-icon">terminal</span>
+        Acceso programático
+      </h2>
+      <p>
+        Por el momento los datos se distribuyen como archivos estáticos.
+        Cuando se implemente el backend FastAPI + PostgreSQL/PostGIS, se habilitará
+        una API REST pública con filtros por capa, barrio y atributos.
+      </p>
+      <p>
+        [Actualizá esta sección cuando la API esté disponible: documentá los endpoints,
+        formatos de respuesta, límites de uso y autenticación si aplica.]
+      </p>
+    </section>
+
+  </main>
+
+  <script>
+    const obs = new IntersectionObserver(e => e.forEach(x => {
+      if (x.isIntersecting) x.target.classList.add('visible');
+    }), { threshold: 0.08 });
+
+    setTimeout(() => obs.observe(document.getElementById('back')), 50);
+    setTimeout(() => obs.observe(document.getElementById('title-wrap')), 100);
+    ['sec-licencia','sec-datasets','sec-solicitar','sec-api'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) setTimeout(() => obs.observe(el), 200 + i * 80);
+    });
+  </script>
+
+  <script src="assets/js/footer.js"></script>
+</body>
+</html>
