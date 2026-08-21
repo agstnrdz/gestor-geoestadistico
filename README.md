@@ -1,7 +1,7 @@
 <h2 align="center">Gestor de datos georreferenciados</br>(interno)</h2>
 
 <p align="center">
-  <a href="https://agstnrdz.github.io/inundaciones"><strong>Ver la aplicación en vivo</strong></a>
+  <a href="https://agstnrdz.github.io/gestor-geoestadistico/"><strong>Ver la aplicación en vivo</strong></a>
 </p>
 
 <p align="center">
